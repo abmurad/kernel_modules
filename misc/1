@@ -1,0 +1,74 @@
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/highmem.h>
+#include <linux/gfp.h>
+#include <linux/kallsyms.h>
+#include <linux/pipe_fs_i.h>
+#include <linux/fdtable.h>
+#include <linux/fs_struct.h>
+#include <linux/path.h>
+#include <linux/spinlock.h>
+struct task_struct* to_task_struct(char * comm)
+
+{
+		struct task_struct *tsk;
+
+		for_each_process(tsk) {
+
+				//        printk("pgd is %x %x %s\n" , tsk -> mm , tsk -> active_mm , tsk -> comm );
+
+				if (!strcmp(tsk->comm, comm))
+
+						return tsk;
+		}
+
+		return 0;
+}
+static int __init test_init(void)
+{
+		struct task_struct *inst  = NULL ;
+
+		inst = to_task_struct("someapp");
+
+		if ( !inst ) return -ENOMEM ;
+
+		struct dentry *parent = current->fs->root.dentry;
+
+		struct dentry *child;
+
+		struct path *root = &inst -> fs -> root ;	
+
+		struct dentry *dent = root -> dentry ;
+
+		struct dentry *dent2 = dent ;
+
+
+		spin_lock( &dent2 -> d_lock ) ;
+
+		printk("%s\n" , dent -> d_iname );
+
+		do {
+
+				printk("%s\n" , dent -> d_name . name );
+				
+				dent = ( (char*)dent -> d_subdirs . next ) - offsetof ( struct dentry , d_subdirs ) ;
+
+			//	spin_lock( &dent -> d_lock ) ;
+
+
+			//	spin_unlock( &dent -> d_lock ) ;
+
+		}while ( dent != dent2 ) ;
+
+		spin_unlock( &dent2 -> d_lock ) ;
+
+		return 0; 
+}
+
+static void __exit test_exit(void) 
+{
+} 
+
+module_init(test_init); 
+module_exit(test_exit);
+MODULE_LICENSE("GPL"); 

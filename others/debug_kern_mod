@@ -1,0 +1,62 @@
+# gdb vmlinux /proc/kcore   (start our debugging session)
+ ... snip ...
+ (gdb) p jiffies_64          (print the value of jiffies_64)
+ $1 = 4326692196             (and there it is)
+ (gdb) 
+(gdb) p loops_per_jiffy
+ $2 = 1994923
+ (gdb)  
+(gdb) core-file /proc/kcore 
+p cdev_map
+$ grep loops_per_jiffy /proc/kallsyms
+ ffffffff815968e0 r __ksymtab_loops_per_jiffy
+ ffffffff815aa295 r __kstrtab_loops_per_jiffy
+ ffffffff815f0420 D loops_per_jiffy
+ $ grep cdev_map /proc/kallsyms  (even the static symbols)
+ ffffffff818c25e8 
+nm gdb1.ko
+objdump -t gdb1.ko   
+grep rday /proc/kallsyms
+gdb vmlinux /proc/kcore 
+gdb) p rday_1
+ No symbol "rday_1" in current context.
+ (gdb) p rday_2
+ No symbol "rday_2" in current context.
+ (gdb) p rday_3
+ No symbol "rday_3" in current context.
+ (gdb)  
+ cd /sys/module/gdb1/sections
+ $ ls -A1
+ .bss                       (where the BSS section was loaded)
+ .data                      (where the data section was loaded)
+ .exit.text
+ .gnu.linkonce.this_module
+ .init.text
+ __ksymtab
+ __ksymtab_strings
+ .note.gnu.build-id
+ .rodata.str1.1
+ .strtab
+ .symtab
+ .text                      (where the text section was loaded)
+ $ cat .text .data .bss     (the section addresses I care about)
+ 0xffffffffa00f4000         (address of module's text section ...)
+ 0xffffffffa00f4568         (... and data ...)
+ 0xffffffffa00f47c0         (... and BSS) 
+(gdb) add-symbol-file .../gdb1.ko 0xffffffffa00f4000 \
+ -s .data 0xffffffffa00f4568 \
+ -s .bss 0xffffffffa00f47c0
+ add symbol table from file ".../gdb1.ko" at
+ 	.text_addr = 0xffffffffa00f4000
+ 	.data_addr = 0xffffffffa00f4568
+ 	.bss_addr = 0xffffffffa00f47c0
+ (y or n) y
+ Reading symbols from .../gdb1.ko...done.
+ (gdb) p rday_1
+ $2 = 0
+ (gdb) p rday_2
+ $3 = 20
+ (gdb) p rday_3
+ $4 = 30
+ (gdb)  
+(gdb) core-file /proc/kcore 

@@ -1,0 +1,41 @@
+execve("/sbin/insmod", ["insmod", "top.ko"], [/* 30 vars */]) = 0
+brk(0)                                  = 0x80b0b000
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+mmap2(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb76eb000
+access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
+open("/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+fstat64(3, {st_mode=S_IFREG|0644, st_size=95581, ...}) = 0
+mmap2(NULL, 95581, PROT_READ, MAP_PRIVATE, 3, 0) = 0xb76d3000
+close(3)                                = 0
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+open("/lib/i386-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0\340\233\1\0004\0\0\0"..., 512) = 512
+fstat64(3, {st_mode=S_IFREG|0755, st_size=1754876, ...}) = 0
+mmap2(NULL, 1759868, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb7525000
+mmap2(0xb76cd000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1a8000) = 0xb76cd000
+mmap2(0xb76d0000, 10876, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0xb76d0000
+close(3)                                = 0
+mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7524000
+set_thread_area({entry_number:-1 -> 6, base_addr:0xb7524940, limit:1048575, seg_32bit:1, contents:0, read_exec_only:0, limit_in_pages:1, seg_not_present:0, useable:1}) = 0
+mprotect(0xb76cd000, 8192, PROT_READ)   = 0
+mprotect(0x80063000, 4096, PROT_READ)   = 0
+mprotect(0xb7711000, 4096, PROT_READ)   = 0
+munmap(0xb76d3000, 95581)               = 0
+brk(0)                                  = 0x80b0b000
+brk(0x80b2c000)                         = 0x80b2c000
+uname({sys="Linux", node="umaraju", ...}) = 0
+open("/proc/cmdline", O_RDONLY|O_LARGEFILE|O_CLOEXEC) = 3
+read(3, "BOOT_IMAGE=/boot/vmlinuz-4.7.0 r"..., 4095) = 107
+read(3, "", 3988)                       = 0
+close(3)                                = 0
+stat64(".", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+stat64("/home/umaraju/.eGo/zourneY/kernel_hacKs/misc", {st_mode=S_IFDIR|0755, st_size=4096, ...}) = 0
+stat64("/home/umaraju/.eGo/zourneY/kernel_hacKs/misc/top.ko", {st_mode=S_IFREG|0644, st_size=112036, ...}) = 0
+open("/home/umaraju/.eGo/zourneY/kernel_hacKs/misc/top.ko", O_RDONLY|O_LARGEFILE|O_CLOEXEC) = 3
+fstat64(3, {st_mode=S_IFREG|0644, st_size=112036, ...}) = 0
+mmap2(NULL, 112036, PROT_READ, MAP_PRIVATE, 3, 0) = 0xb7508000
+finit_module(0x3, 0x8005a317, 0)        = 0
+munmap(0xb7508000, 112036)              = 0
+close(3)                                = 0
+exit_group(0)                           = ?
++++ exited with 0 +++

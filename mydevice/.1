@@ -1,0 +1,247 @@
+// /sys/module/read_write/parameters
+
+#include    </usr/src/linux-4.7.0/include/linux/module.h>
+
+#include    <linux/kernel.h> //container_of //differernt printk loglevels ..KERN_ERR KERN_EMERGE ..
+
+#include    <linux/kdev_t.h> // int print_dev_t ( char *buffer , dev_t dev ) // char *format_dev_t ( char *buffer , dev_t dev )
+
+#include    <linux/init.h>
+
+#include    <linux/genhd.h>
+
+#include    <linux/blkdev.h>
+
+#include   <linux/slab.h> //kmalloc kfrre
+
+#include <linux/kallsyms.h>
+
+#include <linux/spinlock.h>
+
+#include <linux/moduleparam.h>
+
+#define DEVICE_NAME "uma_blk"
+
+void my_request ( struct request_queue *q );
+
+#define KERNEL_SECTOR_SIZE 512
+
+MODULE_LICENSE("GPL");
+
+int major_number ;
+
+int ret ;
+
+dev_t dev_num ;
+
+struct blk_dev {
+
+	int size ;
+
+	spinlock_t lock;
+
+	char *data ;
+
+	struct request_queue *queue ;
+
+	struct gendisk *gdisk ;
+
+};
+
+struct blk_dev *my_inst ;
+
+void blk_operations ( struct blk_dev *dev , unsigned long sector , unsigned long nsect , char *buffer , int operation ) 
+{
+	unsigned long offset = sector * 512 ;
+
+	unsigned long nbytes = nsect * 512 ;
+
+	if ( ( offset + nbytes ) > dev -> size ) {
+
+		printk("requesting more data than size of virtual disk\n");
+
+		return ;
+
+	}
+
+	if ( operation == WRITE ) ;
+
+		memcpy(dev -> data + offset , buffer , nbytes);
+
+	else 
+
+		memcpy(buffer ,dev -> data + offset , nbytes);
+
+	return ;
+
+}
+
+void my_request ( struct request_queue *q )
+
+{
+	struct request *req;
+
+	struct blk_dev *dev = NULL ;
+
+	printk ("request function has been called \n");
+
+	req = blk_fetch_request(q);
+
+//	printk("req %x\n" , req );
+	
+	while (req != NULL) {
+	
+	dev = req -> rq_disk -> private_data ;
+
+//	printk("disk name %s\n" , dev ->gdisk -> disk_name );
+
+		if (req == NULL || (req->cmd_type != REQ_TYPE_FS)) {
+
+			__blk_end_request_all(req, -EIO);
+		
+			continue;
+		}
+
+		blk_opearions ( dev , 0 , 1 , req -> buffer , rq_data_dir(req) ) ;
+
+//		printk("rq_data_dir(req) is %d\n" ,rq_data_dir(req) );
+	
+		if ( rq_data_dir(req) )
+
+			printk("it is a request for writing into disk\n");
+
+		else  printk("it is a request for writing into disk\n");
+
+		if ( ! __blk_end_request_cur(req, 0) ) {
+
+			req = blk_fetch_request(q);
+		}
+	}
+
+	//printk("returning from requet\n");
+
+	return  ;
+}
+
+
+
+int device_open (struct inode *inodep, struct file *filep)
+{
+	return 0 ;
+
+}
+
+int device_close (struct inode *inodep, struct file *filep)
+{
+
+	return 0 ;
+
+}
+struct block_device_operations device_ops ={
+
+	.owner = THIS_MODULE ,
+
+	.open = device_open ,
+
+	.release = device_close ,
+
+};
+
+int init_module ( void )
+{
+
+	major_number = register_blkdev ( major_number , DEVICE_NAME ) ;
+
+	if ( major_number <= 0 ) {
+
+		printk("failed to get major number\n");
+
+		return 1 ;
+	}
+
+	my_inst = kmalloc ( sizeof ( struct blk_dev ) , GFP_KERNEL ) ;
+
+	if ( my_inst == NULL ) {
+
+		printk ("memory allocation failed\n");
+
+		return 1 ;
+
+	}
+
+	memset ( my_inst , 0 , sizeof (struct blk_dev) ) ;
+
+	my_inst -> size = 1024 ;
+
+	my_inst -> data = NULL ;
+
+	my_inst -> data = kmalloc ( 1024 , GFP_KERNEL ) ;
+
+	if ( my_inst -> data == NULL ) {
+
+		printk ("memory allocation failed\n");
+
+		return 1 ;
+
+	}
+
+	spin_lock_init ( &my_inst -> lock ) ;
+
+	my_inst -> queue = blk_init_queue ( my_request , &my_inst -> lock ) ;
+
+	if ( my_inst -> queue == NULL ) {
+
+		printk ("queue init failed\n");
+
+		return 1 ;
+
+	}
+
+	my_inst -> gdisk = alloc_disk ( 1 ) ;
+
+	if ( my_inst -> gdisk == NULL ) {
+
+		printk ("alloc disk has failed\n");
+
+		return 1 ;
+
+	}
+
+	my_inst -> gdisk -> major = major_number ;
+
+	my_inst -> gdisk -> first_minor = 0 ;
+
+	my_inst -> gdisk -> fops = &device_ops;
+
+	my_inst -> gdisk -> queue = my_inst -> queue ;
+
+	my_inst -> gdisk -> private_data = my_inst ;
+
+	snprintf (my_inst -> gdisk -> disk_name, 32, DEVICE_NAME );
+
+	//memcpy ( my_inst -> gdisk -> disk_name , 32 , DEVICE_NAME ) ;
+
+	set_capacity ( my_inst -> gdisk  , 1024 / KERNEL_SECTOR_SIZE ) ;
+
+	add_disk ( my_inst -> gdisk );
+
+}
+void cleanup_module ( void ) 
+{	
+
+	del_gendisk( my_inst -> gdisk ) ;
+
+	put_disk(my_inst -> gdisk);
+
+	kfree ( my_inst -> data ) ;
+
+	kfree ( my_inst ) ;
+
+	blk_cleanup_queue( my_inst -> queue  );
+
+	unregister_blkdev ( major_number , DEVICE_NAME ) ;
+
+	printk("unloades module\n");
+
+}
+

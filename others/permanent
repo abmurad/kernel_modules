@@ -1,0 +1,2 @@
+mv module.ko /lib/modules/4.6.3/kernel/drivers/
+vim /etc/modules ---> module ---> :wq
